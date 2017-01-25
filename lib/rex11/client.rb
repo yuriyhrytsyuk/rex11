@@ -102,6 +102,7 @@ module Rex11
           xml_request.AuthenticationString(@auth_token)
           xml_request.PickTicket(xmlns: 'http://rex11.com/swpublicapi/PickTicket.xsd') do |xml_request|
             xml_request.PickTicketNumber(pick_ticket_options[:pick_ticket_id])
+            xml_request.OrderNumber(pick_ticket_options[:order_number])
             xml_request.WareHouse(pick_ticket_options[:warehouse])
             xml_request.PaymentTerms(pick_ticket_options[:payment_terms])
             xml_request.UseAccountUPS(pick_ticket_options[:use_ups_account])
@@ -262,6 +263,8 @@ module Rex11
                 xml_request.Comments(item[:comments], xmlns: 'http://rex11.com/swpublicapi/ReceivingTicketItems.xsd')
                 xml_request.ShipmentType(item[:shipment_type], xmlns: 'http://rex11.com/swpublicapi/ReceivingTicketItems.xsd')
               end
+            end
+            items.map{|i| i[:shipment_type]}.uniq.each do |item|
               xml_request.ShipmentTypelist(item[:shipment_type])
             end
             xml_request.Warehouse(receiving_ticket_options[:warehouse])
@@ -329,9 +332,46 @@ module Rex11
       parse_get_inventory(commit(xml_request))
     end
 
+    def get_inventory_by_style(style_number)
+      require_auth_token
+      xml_request = soap_body do |xml_request|
+        xml_request.GetInventoryByStyle(xmlns: 'http://rex11.com/webmethods/') do |xml_request|
+          xml_request.AuthenticationString(@auth_token)
+          xml_request.style(style_number)
+        end
+      end
+      parse_get_inventory_by_style(commit(xml_request))
+    end
+
     def parse_get_inventory(xml_response)
       response = XmlSimple.xml_in(xml_response, ForceArray: ['Notification'])
       response_content = response['Body']['GetInventoryResponse']['GetInventoryResult']
+
+      inventory = response_content['Inventory']
+      if inventory and !inventory.empty?
+        inventory['item'].map do |item|
+          {
+              warehouse: item['Warehouse'],
+              sku: item['Sku'],
+              style: item['Style'],
+              color: item['Color'],
+              size: item['Size'],
+              upc: item['Upc'],
+              description: item['Description'],
+              price: item['Price'],
+              actual_quantity: item['ActualQuantity'],
+              pending_quantity: item['PendingQuantity'],
+          }
+        end
+      else
+        error_string = parse_error(response_content)
+        raise error_string unless error_string.empty?
+      end
+    end
+
+    def parse_get_inventory_by_style(xml_response)
+      response = XmlSimple.xml_in(xml_response, ForceArray: ['Notification'])
+      response_content = response['Body']['GetInventoryByStyleResponse']['GetInventoryByStyleResult']
 
       inventory = response_content['Inventory']
       if inventory and !inventory.empty?
