@@ -264,8 +264,8 @@ module Rex11
                 xml_request.ShipmentType(item[:shipment_type], xmlns: 'http://rex11.com/swpublicapi/ReceivingTicketItems.xsd')
               end
             end
-            items.map{|i| i[:shipment_type]}.uniq.each do |item|
-              xml_request.ShipmentTypelist(item[:shipment_type])
+            items.map{|i| i[:shipment_type]}.uniq.each do |shipment_type|
+              xml_request.ShipmentTypelist(shipment_type)
             end
             xml_request.Warehouse(receiving_ticket_options[:warehouse])
             xml_request.Memo(receiving_ticket_options[:memo])
