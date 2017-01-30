@@ -466,7 +466,7 @@ module Rex11
             :pick_ticket_status => (value = pick_ticket_hash['ShipmentStatus']) ? value['content'] : nil,
             :pick_ticket_status_code => (value = pick_ticket_hash['ShipmentStatusCode']) ? value['content'] : nil,
             :shipping_charge => (value = pick_ticket_hash['FreightCharge']) ? value['content'] : nil,
-            :tracking_number => (tracking_number = pick_ticket_hash['TrackingNumber']) ? tracking_number['content'] : nil
+            :tracking_number => (package_list = pick_ticket_hash['PackageList']) ? package_list['TrackingNumber'] : nil
         }
       else
         error_string = parse_error(response_content)
