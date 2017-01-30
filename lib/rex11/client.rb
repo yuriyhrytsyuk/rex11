@@ -172,7 +172,7 @@ module Rex11
               ticket_id: item['TicketId'],
               ticket_status: item['TicketStatus'],
               status_code: item['StatusCode'],
-              tracking_numbers: item['TrackingNumbers'],
+              tracking_numbers: item['TrackingNumbers']['string'].is_a?(Hash) ? nil : item['TrackingNumbers']['string'],
           }
         end
       else
