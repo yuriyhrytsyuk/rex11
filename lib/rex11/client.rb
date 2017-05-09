@@ -506,18 +506,19 @@ module Rex11
     end
 
     def parse_get_receiving_statuses_by_date_configurable_response(xml_response)
-      response = XmlSimple.xml_in(xml_response, ForceArray: ['Notification'])
+      response = XmlSimple.xml_in(xml_response, ForceArray: ['Notification', 'ReceivingTicketShipmentStatus'])
       response_content = response['Body']["GetReceivingStatusesByDateConfigurableResponse"]["GetReceivingStatusesByDateConfigurableResult"]
 
       receiving_ticket_status = response_content["ReceivingTicketStatus"]
       if receiving_ticket_status and !receiving_ticket_status.empty?
-        receiving_ticket_status["ReceivingTicketShipmentStatus"].map do |item|
+        result = receiving_ticket_status["ReceivingTicketShipmentStatus"].map do |item|
           {
               :ticket_id => item["TicketId"],
               :ticket_status => item["TicketStatus"],
               :status_code => item["StatusCode"],
           }
         end
+        return result
       else
         error_string = parse_error(response_content)
         raise error_string unless error_string.empty?
@@ -525,7 +526,7 @@ module Rex11
     end
 
     def parse_get_receiving_ticket_object_by_ticket_number(xml_response)
-      response = XmlSimple.xml_in(xml_response, ForceArray: ['Notification'])
+      response = XmlSimple.xml_in(xml_response, ForceArray: ['Notification', 'Shipmentitemslist'])
       response_content = response['Body']["GetReceivingTicketObjectByTicketNoResponse"]["GetReceivingTicketObjectByTicketNoResult"]
 
       receiving_ticket_hash = response_content["ReceivingTicketByTicketNo"]
@@ -538,8 +539,8 @@ module Rex11
               :size => item["Size"]['content'],
               :color => item["Color"]['content'],
               :description => item["ProductDescription"]['content'],
-              :quantity => item["ExpectedQuantity"]['content'],
-              :comments => item["Comments"]['content'],
+              :quantity => item["ActualQuantity"]['content'],
+              :expected_quantity => item["ExpectedQuantity"]['content'],
               :shipment_type => item["ShipmentType"]['content']
           }
         end
